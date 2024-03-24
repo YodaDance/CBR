@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+ <body>
+  <h1>Динамика показателей и прогноз</h1>
+  <button onclick="goBack()">Вернуться к загрузке файла</button>
+  <script>
+  function goBack() {
+  window. history. back();
+  }
+</script>
+  <div id='chart' class='chart'></div>
+</body>
+<script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>-->
+<script type='text/javascript'>
+  var graphs = {{graphJSON | safe}};
+  Plotly.plot('chart',graphs,{});
+</script>
+</html>
+
+
+
+
+<!-- <!doctype html>
+<html>
+<head>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        function cb(selection) {
+            $.getJSON({
+                url: "/callback", data: { 'data': selection }, success: function (result) {
+                    Plotly.react('chart', result, {});;
+                }
+            });
+        }
+    </script>
+</head>
+
+<body style="font-family:arial, sans-serif">
+    <h1>Прогноз инфляции на 6 месяцев вперед</h1>
+    <h2>Загрузите новый файл повторно ниже</h2>
+    <p>Убедитесь, что файл скачан с официального сайта Росстата в формате xlsx.</p>
+    <form method=post enctype=multipart/form-data>
+        <input type=file name=file>
+        <input type=submit value=Загрузить>
+    </form>
+    <!-- <input type="text" id="fname" name="fname" onchange="cb(this.value)"> -->
+    <div id="chart" class="chart"></div>
+    <div id="png_chart"></div>
+</body>
+
+<script>
+    cb(file);
+</script>
+</html> -->
