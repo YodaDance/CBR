@@ -8,7 +8,10 @@
   window. history. back();
   }
 </script>
-  <div id='chart' class='chart'></div>
+  <div id='chart' class='IPC_MoM'></div>
+  <div id='chart2' class='IPC_base'></div>
+  <div id='chart3' class='Forecast'></div>
+  <table> {{ table|safe }} </table>
 </body>
 <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
 <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>-->
@@ -16,6 +19,15 @@
   var graphs = {{graphJSON | safe}};
   Plotly.plot('chart',graphs,{});
 </script>
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>-->
+<script type='text/javascript'>
+  var graphs = {{graphJSON2 | safe}};
+  Plotly.plot('chart2',graphs,{});
+</script>
+<script type='text/javascript'>
+    var graphs = {{graphJSON3 | safe}};
+    Plotly.plot('chart3',graphs,{});
+  </script>
 </html>
 
 

@@ -53,13 +53,23 @@ def cb():
    
 @app.route('/index/<file>')
 def index(file):
-    return render_template('index.html',  graphJSON=gm(file))
+    graphJSONs, table = gm(file)
+    return render_template('index.html',  graphJSON=graphJSONs[0], graphJSON2=graphJSONs[1], graphJSON3 = graphJSONs[2], table = table)
 
 def gm(file):
     df = Model(file)
-    df.preprocess_excel()
+    df.make_predictions(6)
+    df.transform_forecast()
+    
+    charts = [
+        px.line(df.data, x = "date", y = "value", title = "График динамики ИПЦ - MoM", line_group = "ipc_type", color = "ipc_type"),
+        px.line(df.data, x = "date", y = "base", title = "График динамики ИПЦ - Base", line_group = "ipc_type", color = "ipc_type"),
+        px.line(df.data, x = "date", y = "MoM_sa_final", title = "График ИПЦ и прогноза", line_group = "ipc_type", color = "ipc_type")
+    ]
 
-    fig = px.line(df.data, x = "date", y = "base", title = "График динамики ИПЦ", line_group = "ipc_type", color = "ipc_type")
-
-    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    return graphJSON
+    graphJSONs = list(map(lambda fig: json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder), charts))
+    data = df.data[["date", "ipc_type", "value", "base", "sa", "MoM_sa_final"]]
+    data.rename({"value": "MoM", "sa": "base_sa", "MoM_sa_final": "MoM_sa with forecast"})
+    del df
+    
+    return graphJSONs, data.to_html(header=True)
