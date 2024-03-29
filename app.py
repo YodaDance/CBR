@@ -5,6 +5,7 @@ from forecast import Model
 import json
 import plotly
 import plotly.express as px
+import plotly.graph_objects as go
 import pandas as pd
 import datetime
 import numpy as np
@@ -72,15 +73,54 @@ def gm(file):
     
     data = df.data[["date", "ipc_type", "value", "base", "sa", "MoM_sa_final"]]
     data["forecast"] = data.apply(lambda row: row["MoM_sa_final"] if np.isnan(row["sa"]) else np.NAN, axis=1)
+    data["MoM sa"] = data.apply(lambda row: row["MoM_sa_final"] if np.isnan(row["forecast"]) else np.NAN, axis=1)
     data.rename(columns={"value": "MoM", "sa": "base sa", "MoM_sa_final": "MoM sa with forecast"}, inplace = True)
     data = data[data["date"].apply(lambda x: x.year >= max(data["date"]).year - 3)]
     path = os.path.join(app.config['DOWNLOAD_FOLDER'], "results.csv")
     df.data.to_csv(path)
     
+    # график с прогнозом
+    dates = data["date"].unique()
+    ipc_mom = data[data["ipc_type"] == "ИПЦ"]["MoM sa"]
+    prod_ipc_mom = data[data["ipc_type"] == "Продовольственный ИПЦ"]["MoM sa"]
+    nprod_ipc_mom = data[data["ipc_type"] == "Непродовольственный ИПЦ"]["MoM sa"]
+    services_ipc_mom = data[data["ipc_type"] == "ИПЦ услуг"]["MoM sa"]
+    ipc_forecast = data[data["ipc_type"] == "ИПЦ"]["MoM sa with forecast"]
+    prod_ipc_forecast = data[data["ipc_type"] == "Продовольственный ИПЦ"]["MoM sa with forecast"]
+    nprod_ipc_forecast = data[data["ipc_type"] == "Непродовольственный ИПЦ"]["MoM sa with forecast"]
+    services_ipc_forecast = data[data["ipc_type"] == "ИПЦ услуг"]["MoM sa with forecast"]
+    
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=dates, y=ipc_mom, name='ИПЦ',
+                            line=dict(color='blue', width=1)))
+    fig.add_trace(go.Scatter(x=dates, y=prod_ipc_mom, name = 'Продовольственный ИПЦ',
+                            line=dict(color='red', width=1)))
+    fig.add_trace(go.Scatter(x=dates, y=nprod_ipc_mom, name='Непродовольственный ИПЦ',
+                            line=dict(color='green', width=1)))
+    fig.add_trace(go.Scatter(x=dates, y=services_ipc_mom, name='ИПЦ услуг',
+                            line=dict(color='purple', width=1)))
+    fig.add_trace(go.Scatter(x=dates, y=ipc_forecast, name='ИПЦ прогноз',
+                            line = dict(color='blue', width=1, dash='dash')))
+    fig.add_trace(go.Scatter(x=dates, y=prod_ipc_forecast, name='Прод. ИПЦ прогноз',
+                            line = dict(color='red', width=1, dash='dash')))
+    fig.add_trace(go.Scatter(x=dates, y=nprod_ipc_forecast, name='Непрод. ИПЦ прогноз',
+                            line=dict(color='green', width=1, dash='dash')))
+    fig.add_trace(go.Scatter(x=dates, y=services_ipc_forecast, name='ИПЦ услуг прогноз',
+                            line=dict(color='purple', width=1, dash='dash')))
+
+    # Edit the layout
+    fig.update_layout(title='Динамика ИПЦ и прогноз',
+                    xaxis_title='Дата',
+                    yaxis_title='MoM sa')
+    
+    fig.update_traces(connectgaps=True)
+    
+    
     charts = [
         px.line(df.data, x = "date", y = "value", title = "График динамики ИПЦ - MoM", line_group = "ipc_type", color = "ipc_type"),
         px.line(df.data, x = "date", y = "base", title = "График динамики ИПЦ - Base", line_group = "ipc_type", color = "ipc_type"),
-        px.line(data, x = "date", y = "MoM sa with forecast", title = "График ИПЦ и прогноза", line_group = "ipc_type", color = "ipc_type")
+        fig
+        #px.line(data, x = "date", y = ["MoM sa", "forecast"], title = "График ИПЦ и прогноза", line_group = "ipc_type", color = "ipc_type")
     ]
 
     graphJSONs = list(map(lambda fig: json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder), charts))
