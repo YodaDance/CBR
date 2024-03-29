@@ -1,14 +1,10 @@
 import pandas as pd
 import numpy as np
-import plotly.express as plt
 from datetime import date, datetime
 
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.api import SARIMAX, AutoReg
 from statsmodels.tsa.seasonal import seasonal_decompose
-from statsmodels.tsa.stattools import adfuller
-from statsmodels.tsa.stattools import acf, pacf
-from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 
 from sklearn.metrics  import mean_squared_error, median_absolute_error, mean_absolute_error
 from sklearn.ensemble import GradientBoostingRegressor
@@ -24,11 +20,19 @@ class Model:
         file_name - наименование файла;
         sheets - листы внутри файла;
         excel_file - pd.ExcelFile, необходимо для считывания листов в файле и сбора данных с них;
-        data - pd.DataFrame, получены методом preprocess_excel
+        data - pd.DataFrame, получены методом preprocess_excel, туда же кладутся результаты прогнозов
+        models_scores - оценка моделей по MAE на тестовой выборке (равно количеству точек для прогноза)
+        ts_series - dlog_sa ряды не в виде df, в виде словаря тип ИПЦ - dlog_sa
+        forecast - прогноз моделей на выбранное количество точек вперед
+        chosen_forecast - те из forecast, которые выбраны по минимальной MAE models_scores
     Обладает следующими методами:
         preprocess_excel - обработка файла, возвращает готовый pd.DataFrame в атрибуте self.data для моделирования;
-        model - в разработке
+        make_ts - создает time series выбранной перменной и показателя
+        evaluate_models - обучение моделей на train выборке и подсчет MAE на тестовой для заданного числа точек прогноза
+        make_predictions - прогноз на выбранное число точек вперед
+        transform_forecast - добавление данных прогноза в self.data
     '''
+    
     months_names = {
     "январь": 1,
     "февраль": 2,
@@ -183,7 +187,9 @@ class Model:
         return self.data
 
     def evaluate_models(self, lags: int):
-        ''' Оценка лучшей модел, делит выборку на train test по выбранному лагу и оценивает лучшую вариант прогнозирования'''
+        ''' 
+        Оценка лучшей модели, делит выборку на train test по выбранному лагу и оценивает лучшую вариант прогнозирования
+        '''
         for series in self.ts_series.keys():
             df = self.data[self.data["ipc_type"] == series].drop(columns = "ipc_type")
             models_params = Model.models_specs[series]
