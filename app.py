@@ -39,7 +39,8 @@ def upload_file():
             filename = secure_filename(file.filename)
             path_to_save = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(path_to_save)
-            return redirect(url_for('index', file=path_to_save))
+            graphJSONs, table = process(file)
+            return render_template('index.html', graphJSON=graphJSONs[0], graphJSON2=graphJSONs[1], graphJSON3 = graphJSONs[2], table = table)
     return '''
     <!doctype html>
     <h1>Прогноз инфляции на 6 месяцев вперед</h1>
@@ -56,11 +57,12 @@ def upload_file():
 # def cb():
 #     return gm(request.args.get('data')) #возвращает json графика
  
-# этот template для выведения результатов   
-@app.route('/index/<file>')
-def index(file):
-    graphJSONs, table = process(file)
-    return render_template('index.html', graphJSON=graphJSONs[0], graphJSON2=graphJSONs[1], graphJSON3 = graphJSONs[2], table = table)
+# этот template для выведения результатов
+# @app.route('/')  
+# #@app.route('/index/<file>')
+# def index(file):
+#     graphJSONs, table = process(file)
+#     return render_template('index.html', graphJSON=graphJSONs[0], graphJSON2=graphJSONs[1], graphJSON3 = graphJSONs[2], table = table)
 
 # для скачки файла результатов
 @app.route('/download')
@@ -136,4 +138,4 @@ def process(file):
 
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(debug=False, host='0.0.0.0', port=5000)
