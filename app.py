@@ -55,18 +55,24 @@ def upload_file():
 # @app.route('/callback', methods=['POST', 'GET'])
 # def cb():
 #     return gm(request.args.get('data')) #возвращает json графика
-   
+ 
+# этот template для выведения результатов   
 @app.route('/index/<file>')
 def index(file):
-    graphJSONs, table = gm(file)
+    graphJSONs, table = process(file)
     return render_template('index.html', graphJSON=graphJSONs[0], graphJSON2=graphJSONs[1], graphJSON3 = graphJSONs[2], table = table)
 
+# для скачки файла результатов
 @app.route('/download')
 def download():
     path = 'results.csv'
     return send_from_directory(app.config["DOWNLOAD_FOLDER"], path)
 
-def gm(file):
+
+def process(file):
+    '''
+    заводим в класс Model, делаем необходимые вычисления. Выводим графики и таблицу, результат сохраняем в results.csv.
+    '''
     df = Model(file)
     df.make_predictions(6)
     df.transform_forecast()
